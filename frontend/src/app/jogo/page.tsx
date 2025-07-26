@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authAPI, gameAPI, utils } from "../../services/api";
@@ -13,6 +13,17 @@ export default function Jogo() {
   const [error, setError] = useState("");
   const router = useRouter();
 
+  const loadUserData = useCallback(async () => {
+    try {
+      const userData = await authAPI.getUser();
+      setUser(userData);
+    } catch (error) {
+      console.error("Erro ao carregar dados do usuário:", error);
+      authAPI.logout();
+      router.push("/login");
+    }
+  }, [router]);
+
   useEffect(() => {
     // Verificar se está logado
     if (!authAPI.isAuthenticated()) {
@@ -22,18 +33,7 @@ export default function Jogo() {
 
     // Carregar dados do usuário
     loadUserData();
-  }, []);
-
-  const loadUserData = async () => {
-    try {
-      const userData = await authAPI.getUser();
-      setUser(userData);
-    } catch (error) {
-      console.error("Erro ao carregar dados do usuário:", error);
-      authAPI.logout();
-      router.push("/login");
-    }
-  };
+  }, [loadUserData, router]);
 
   const handleRaspar = async () => {
     if (!user || user.credits < 1) return;
@@ -132,7 +132,7 @@ export default function Jogo() {
             <div className="bg-white rounded-2xl shadow-2xl p-8">
               <div className="text-center mb-6">
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">Sua Raspadinha</h2>
-                <p className="text-gray-600">Clique em "Raspar" para jogar</p>
+                <p className="text-gray-600">Clique em &quot;Raspar&quot; para jogar</p>
               </div>
               
               {/* Área da Raspadinha */}
