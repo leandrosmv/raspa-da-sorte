@@ -1,0 +1,83 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  credits   Int      @default(0)
+  balance   Float    @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relacionamentos
+  transactions Transaction[]
+  prizes       Prize[]
+
+  @@map("users")
+}
+
+model Transaction {
+  id        String   @id @default(cuid())
+  userId    String
+  type      TransactionType
+  amount    Float
+  credits   Int?
+  status    TransactionStatus @default(PENDING)
+  createdAt DateTime @default(now())
+
+  // Relacionamentos
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("transactions")
+}
+
+model Prize {
+  id        String   @id @default(cuid())
+  userId    String
+  amount    Float
+  claimed   Boolean  @default(false)
+  claimedAt DateTime?
+  createdAt DateTime @default(now())
+
+  // Relacionamentos
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("prizes")
+}
+
+model GameSession {
+  id        String   @id @default(cuid())
+  userId    String
+  creditsUsed Int
+  prizeWon  Float?
+  createdAt DateTime @default(now())
+
+  @@map("game_sessions")
+}
+
+enum TransactionType {
+  CREDIT_PURCHASE
+  PRIZE_WITHDRAWAL
+  CREDIT_REFUND
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
